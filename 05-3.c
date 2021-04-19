@@ -25,6 +25,11 @@ int main() {
 	char resString[18];
 	int semid;
 
+	int N;
+	printf("Enter N: ");
+	scanf("%d", &N);
+	printf("\n");
+
   	if ((key = ftok(pathname, 0)) < 0) {
    		printf("can\'t create key\n");
     		exit(-1);
@@ -49,21 +54,12 @@ int main() {
 		exit(-1);
 	} else if (res > 0) {
 		// Родительский процесс
-		int N;
-		printf("Enter N: ");
-		scanf("%d", &N);
-		printf("\n");
 		for (size_t i = 0; i < N; ++i) {
 			if (write(fd[1], "Hello from parent", 18) != 18) {
 				printf("Parent process: write error!");
 				exit(-1);
 			}
 			
-			// Открываем ребенку право на чтение и запись
-			mybuf.sem_num = 0;
-    			mybuf.sem_op  = 1;
-    			mybuf.sem_flg = 0;
-    			semop(semid, &mybuf, 1);
 			// Ждем, когда ребенок отдаст право на чтение
 			mybuf.sem_num = 0;
    		 	mybuf.sem_op  = -1;
@@ -81,12 +77,8 @@ int main() {
 		close(fd[0]);
 	} else {
 		// Процесс-ребенок
-		while (1) {
+		for (int i = 0; i < N; ++i) {
 			// Ждем пока родитель откроет право на чтение
-			mybuf.sem_num = 0;
-   			mybuf.sem_op  = -1;
-   			mybuf.sem_flg = 0;
-   			semop(semid, &mybuf, 1);
 			if ((size = read(fd[0], resString, 18)) < 0) {
 				close(fd[1]);
 				close(fd[0]);
